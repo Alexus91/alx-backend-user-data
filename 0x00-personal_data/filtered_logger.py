@@ -1,26 +1,22 @@
 #!/usr/bin/env python3
 """
-filter_datum function that returns an obfuscated log message
+Definition of filter_datum function that returns an obfuscated log message
 """
-from typing import List
 import re
+from typing import List
 
 
-def filter_datum(fields_to_obfuscate: List[str], obfuscation_string: str,
-                 log_message: str, field_separator: str) -> str:
+def filter_datum(fields: List[str], redaction: str,
+                 message: str, separator: str) -> str:
     """
-    Returns an obfuscated log message.
-
+    Return an obfuscated log message
     Args:
-        fields_to_obfuscate (list): List of strings to obfuscate.
-        obfuscation_string (str): String to which the field will be obfuscated.
-        log_message (str): The log line to obfuscate.
-        field_separator (str): The character separating the fields.
+        fields (list): list of strings indicating fields to obfuscate
+        redaction (str): what the field will be obfuscated to
+        message (str): the log line to obfuscate
+        separator (str): the character separating the fields
     """
-    for field in fields_to_obfuscate:
-        log = re.sub(
-            field + '=.*?' + field_separator,
-            field + '=' + obfuscation_string + field_separator,
-            log_message
-        )
-    return log
+    for field in fields:
+        message = re.sub(field+'=.*?'+separator,
+                         field+'='+redaction+separator, message)
+    return message
