@@ -56,10 +56,14 @@ def get_logger() -> logging.Logger:
     """
     Returns a logging.Logger object named "user_data" configured as specified.
     """
-    logger = logging.getLogger('user_data')
+    logger = logging.getLogger("user_data")
     logger.setLevel(logging.INFO)
+    logger.propagate = False
+
+    handler = logging.StreamHandler()
+
     formatter = RedactingFormatter(PII_FIELDS)
-    stream_handler = logging.StreamHandler()
-    stream_handler.setFormatter(formatter)
-    logger.addHandler(stream_handler)
+
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
     return logger
