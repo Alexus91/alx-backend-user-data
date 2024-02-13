@@ -39,6 +39,7 @@ class Auth:
             else:
                 if exc[:-1] == path[:l_exc - 1]:
                     return False
+        return True
 
     def authorization_header(self, request=None) -> str:
         """
