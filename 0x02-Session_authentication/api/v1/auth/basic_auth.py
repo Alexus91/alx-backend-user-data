@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-""" Basic Authentication
+""" Module of Basic Authentication
 """
 from api.v1.auth.auth import Auth
 from base64 import b64decode
@@ -8,7 +8,8 @@ from typing import TypeVar
 
 
 class BasicAuth(Auth):
-    """ Authentication Class """
+    """ Basic Authentication Class """
+
     def extract_base64_authorization_header(self,
                                             authorization_header: str) -> str:
         """ Extract Base 64 Authorization Header """
@@ -26,18 +27,10 @@ class BasicAuth(Auth):
 
         return encoded
 
-    def decode_base64_authorization_header(
-            self, base64_authorization_header: str) -> str:
-        """Decodes the Base64 string `base64_authorization_header` and
-        returns the decoded value as a UTF8 string.
-
-        Args:
-            base64_authorization_header (str): A Base64 encoded string to be
-            decoded.
-
-        Returns:
-            str: The decoded value as a UTF8 string.
-        """
+    def decode_base64_authorization_header(self,
+                                           base64_authorization_header: str
+                                           ) -> str:
+        """ Decodes the value of a base64 string """
         if base64_authorization_header is None:
             return None
         if not isinstance(base64_authorization_header, str):
@@ -56,7 +49,7 @@ class BasicAuth(Auth):
                                  decoded_base64_authorization_header: str
                                  ) -> (str, str):
         """
-        Returns user email &  password from the
+        Returns the user email and password from the
         Base64 decoded value
         """
 
@@ -97,13 +90,7 @@ class BasicAuth(Auth):
         return None
 
     def current_user(self, request=None) -> TypeVar('User'):
-        """Retrieves the User instance for a request.
-        Args:
-            request (:obj:`Request`, optional): The request object. Defaults
-            to None.
-        Returns:
-            User: The User instance based on the request.
-        """
+        """ overloads Auth and retrieves the User instance for a request """
         auth_header = self.authorization_header(request)
 
         if not auth_header:
