@@ -64,3 +64,18 @@ class Auth:
         - TypeVar('User'): The current user if authenticated, otherwise None.
         """
         return None
+
+    def session_cookie(self, request=None) -> str:
+        """Retrieves the session cookie from a request.
+
+        Args:
+            request (flask.request, optional): Request to retrieve the session
+            cookie from. Defaults to None.
+
+        Returns:
+            str: The value of the session cookie, None if the request or the
+            cookie is invalid.
+        """
+        if request is not None:
+            cookie_name = os.getenv('SESSION_NAME')
+            return request.cookies.get(cookie_name)
