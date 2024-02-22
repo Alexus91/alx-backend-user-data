@@ -2,13 +2,15 @@
 """Module for authentication.
 """
 
-
+import logging
 import bcrypt
 from typing import Union
 from sqlalchemy.orm.exc import NoResultFound
 from db import DB
 from uuid import uuid4
 from user import User
+
+logging.disable(logging.WARNING)
 
 
 def _hash_password(password: str) -> bytes:
@@ -82,3 +84,11 @@ class Auth:
         except NoResultFound:
             return None
         return user
+
+    def destroy_session(self, user_id: int) -> None:
+        """
+        Method to destroy the session associated with a user
+        """
+        if user_id is None:
+            return None
+        self._db.update_user(user_id, session_id=None)
