@@ -10,17 +10,15 @@ from user import User
 
 
 def _hash_password(password: str) -> bytes:
-    """Hashes a password and returns bytes.
-    Args:
-        password (str): The password to be hashed.
-    Returns:
-        bytes: The hashed password.
+    """
+    Hashes a password and returns bytes.
     """
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
 
 
 class Auth:
-    """ the authentication database.
+    """ 
+    the authentication database.
     """
 
     def __init__(self):
@@ -31,15 +29,23 @@ class Auth:
         Registers a new user with the given email and password
         """
         try:
-            # Search for the user by email
             self._db.find_user_by(email=email)
-            # If a user already exist with the passed email, raise a ValueError
             raise ValueError(f"User {email} already exists")
         except NoResultFound:
             pass
-        # If not, hash the password with _hash_password
         hashed_pass = _hash_password(password)
-        # Save the user to the database using self._db
         user = self._db.add_user(email, hashed_pass)
-        # Return the User object
         return user
+
+    def valid_login(self, email: str, password: str) -> bool:
+        """Checks if a user's email and password are valid."""
+        try:
+            user = self._db.find_user_by(email=email)
+            if user is not None:
+                password_bytes = password.encode('utf-8')
+                hashed_password = user.hashed_password
+                if bcrypt.checkpw(password_bytes, hashed_password):
+                    return True
+        except NoResultFound:
+            return False
+        return False
