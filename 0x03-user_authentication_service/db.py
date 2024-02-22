@@ -1,23 +1,28 @@
 #!/usr/bin/env python3
-"""DB module
 """
+Database for ORM
+"""
+import logging
+from typing import Dict
+
 from sqlalchemy import create_engine
+from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm.session import Session
 
-from typing import TypeVar
 from user import Base, User
+
+logging.disable(logging.WARNING)
 
 
 class DB:
     """DB class
     """
+
     def __init__(self) -> None:
-        """
-       Initialize a new DB instance
+        """Initialize a new DB instance
         """
         self._engine = create_engine("sqlite:///a.db", echo=True)
         Base.metadata.drop_all(self._engine)
@@ -26,8 +31,7 @@ class DB:
 
     @property
     def _session(self) -> Session:
-        """
-        Memoized session object
+        """Memoized session object
         """
         if self.__session is None:
             DBSession = sessionmaker(bind=self._engine)
@@ -35,45 +39,53 @@ class DB:
         return self.__session
 
     def add_user(self, email: str, hashed_password: str) -> User:
+        """Adds a new user to the db with the given email and hashed password.
         """
-        Adds a new user to the db with the given email and hashed password.
+        # Create new user
+        new_user = User(email=email, hashed_password=hashed_password)
+        try:
+            self._session.add(new_user)
+            self._session.commit()
+        except Exception as e:
+            print(f"Error adding user to database: {e}")
+            self._session.rollback()
+            raise
+        return new_user
+
+    def find_user_by(self, **kwargs: Dict[str, str]) -> User:
+        """Find a user by specified attributes.
         """
-        user = User(email=email, hashed_password=hashed_password)
-        self._session.add(user)
-        self._session.commit()
-        return user
-
-    def find_user_by(self, **kwargs) -> User:
-        """
-        Finds user by key word args
-        """
-        if not kwargs:
-            raise InvalidRequestError
-
-        column_names = User.__table__.columns.keys()
-        for key in kwargs.keys():
-            if key not in column_names:
-                raise InvalidRequestError
-
-        user = self._session.query(User).filter_by(**kwargs).first()
-
-        if user is None:
-            raise NoResultFound
-
+        session = self._session
+        try:
+            user = session.query(User).filter_by(**kwargs).one()
+        except NoResultFound:
+            raise NoResultFound()
+        except InvalidRequestError:
+            raise InvalidRequestError()
+        # print("Type of user: {}".format(type(user)))
         return user
 
     def update_user(self, user_id: int, **kwargs) -> None:
+        """Updates a user's attributes by user ID and arbitrary keyword
+        arguments.
         """
-        Update users attributes
-        """
-        user = self.find_user_by(id=user_id)
+        try:
+            # Find the user with the given user ID
+            user = self.find_user_by(id=user_id)
+        except NoResultFound:
+            raise ValueError("User with id {} not found".format(user_id))
 
-        column_names = User.__table__.columns.keys()
-        for key in kwargs.keys():
-            if key not in column_names:
-                raise ValueError
-
+        # Update user's attributes
         for key, value in kwargs.items():
+            if not hasattr(user, key):
+                # Raise error if an argument that does not correspond to a user
+                # attribute is passed
+                raise ValueError("User has no attribute {}".format(key))
             setattr(user, key, value)
 
-        self._session.commit()
+        try:
+            # Commit changes to the database
+            self._session.commit()
+        except InvalidRequestError:
+            # Raise error if an invalid request is made
+            raise ValueError("Invalid request")
